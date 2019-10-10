@@ -1,0 +1,65 @@
+set(INTERACTIVE_BROKER_SOURCES
+        client/CommissionReport.h
+        client/CommonDefs.h
+        client/ContractCondition.cpp
+        client/ContractCondition.h
+        client/Contract.h
+        client/DefaultEWrapper.cpp
+        client/DefaultEWrapper.h
+        client/EClient.cpp
+        client/EClient.h
+        client/EClientMsgSink.h
+        client/EClientSocket.cpp
+        client/EClientSocket.h
+        client/EDecoder.cpp
+        client/EDecoder.h
+        client/EMessage.cpp
+        client/EMessage.h
+        client/EMutex.cpp
+        client/EMutex.h
+        client/EPosixClientSocketPlatform.h
+        client/EReader.cpp
+        client/EReader.h
+        client/EReaderOSSignal.cpp
+        client/EReaderOSSignal.h
+        client/EReaderSignal.h
+        client/EReaderWMSignal.cpp
+        client/EReaderWMSignal.h
+        client/ESocket.cpp
+        client/ESocket.h
+        client/ETransport.h
+        client/EWrapper.h
+        client/executioncondition.cpp
+        client/executioncondition.h
+        client/Execution.h
+        client/IExternalizable.h
+        client/MarginCondition.cpp
+        client/MarginCondition.h
+        client/OperatorCondition.cpp
+        client/OperatorCondition.h
+        client/OrderCondition.cpp
+        client/OrderCondition.h
+        client/Order.h
+        client/OrderState.h
+        client/PercentChangeCondition.cpp
+        client/PercentChangeCondition.h
+        client/PriceCondition.cpp
+        client/PriceCondition.h
+        client/Resource.h
+        client/ScannerSubscription.h
+        client/shared_ptr.h
+        client/SoftDollarTier.cpp
+        client/SoftDollarTier.h
+        client/StdAfx.cpp
+        client/StdAfx.h
+        client/TagValue.h
+        client/TimeCondition.cpp
+        client/TimeCondition.h
+        client/TwsSocketClientErrors.h
+        client/VolumeCondition.cpp
+        client/VolumeCondition.h
+        client/)
+
+add_library(IB)
+target_include_directories(IB PRIVATE client)
+target_sources(IB PRIVATE ${INTERACTIVE_BROKER_SOURCES})
