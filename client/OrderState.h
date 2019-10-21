@@ -1,9 +1,9 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef ORDER_STATE_H__INCLUDED
-#define ORDER_STATE_H__INCLUDED
+#ifndef TWS_API_CLIENT_ORDERSTATE_H
+#define TWS_API_CLIENT_ORDERSTATE_H
 
 #include "Order.h"
 
@@ -18,9 +18,15 @@ struct OrderState {
 
 	std::string status;
 
-	std::string initMargin;
-	std::string maintMargin;
-	std::string equityWithLoan;
+	std::string initMarginBefore;
+	std::string maintMarginBefore;
+	std::string equityWithLoanBefore;
+	std::string initMarginChange;
+	std::string maintMarginChange;
+	std::string equityWithLoanChange;
+	std::string initMarginAfter;
+	std::string maintMarginAfter;
+	std::string equityWithLoanAfter;
 
 	double  commission;
 	double  minCommission;
@@ -28,6 +34,9 @@ struct OrderState {
 	std::string commissionCurrency;
 
 	std::string warningText;
+
+	std::string completedTime;
+	std::string completedStatus;
 };
 
 #endif

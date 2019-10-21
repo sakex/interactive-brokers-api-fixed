@@ -1,9 +1,9 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef common_defs_h_INCLUDED
-#define common_defs_h_INCLUDED
+#ifndef TWS_API_CLIENT_COMMONDEFS_H
+#define TWS_API_CLIENT_COMMONDEFS_H
 
 typedef long TickerId;
 typedef long OrderId;

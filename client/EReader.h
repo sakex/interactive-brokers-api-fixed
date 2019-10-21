@@ -1,15 +1,19 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
+#ifndef TWS_API_CLIENT_EREADER_H
+#define TWS_API_CLIENT_EREADER_H
 
-#include "StdAfx.h"
+#include <atomic>
+#include <deque>
+#include "platformspecific.h"
 #include "EDecoder.h"
 #include "EMutex.h"
 #include "EReaderOSSignal.h"
 
 class EClientSocket;
-class EReaderSignal;
+struct EReaderSignal;
 class EMessage;
 
 class TWSAPIDLLEXP EReader
@@ -17,19 +21,20 @@ class TWSAPIDLLEXP EReader
     EClientSocket *m_pClientSocket;
     EReaderSignal *m_pEReaderSignal;
     EDecoder processMsgsDecoder_;
-    std::deque<ibapi::shared_ptr<EMessage>> m_msgQueue;
+    std::deque<std::shared_ptr<EMessage>> m_msgQueue;
     EMutex m_csMsgQueue;
     std::vector<char> m_buf;
-    bool m_needsWriteSelect;
-    bool m_isAlive;
-#if defined(IB_WIN32)
+    std::atomic<bool> m_isAlive;
+#if defined(IB_POSIX)
+    pthread_t m_hReadThread;
+#elif defined(IB_WIN32)
     HANDLE m_hReadThread;
 #endif
-	int m_nMaxBufSize;
+	unsigned int m_nMaxBufSize;
 
 	void onReceive();
 	void onSend();
-	bool bufferedRead(char *buf, int size);
+	bool bufferedRead(char *buf, unsigned int size);
 
 public:
     EReader(EClientSocket *clientSocket, EReaderSignal *signal);
@@ -37,7 +42,7 @@ public:
 
 protected:
 	bool processNonBlockingSelect();
-    ibapi::shared_ptr<EMessage> getMsg(void);
+    std::shared_ptr<EMessage> getMsg(void);
     void readToQueue();
 #if defined(IB_POSIX)
     static void * readToQueueThread(void * lpParam);
@@ -51,8 +56,8 @@ protected:
 
 public:
     void processMsgs(void);
-    void checkClient();
 	bool putMessageToQueue();
 	void start();
 };
 
+#endif

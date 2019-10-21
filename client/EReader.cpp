@@ -1,8 +1,7 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #include "StdAfx.h"
-#include "shared_ptr.h"
 #include "Contract.h"
 #include "EDecoder.h"
 #include "EMutex.h"
@@ -18,35 +17,39 @@
 static DefaultEWrapper defaultWrapper;
 
 EReader::EReader(EClientSocket *clientSocket, EReaderSignal *signal)
-	: processMsgsDecoder_(clientSocket->EClient::serverVersion(), clientSocket->getWrapper(), clientSocket) {
+	: processMsgsDecoder_(clientSocket->EClient::serverVersion(), clientSocket->getWrapper(), clientSocket)
+#if defined(IB_POSIX)
+    , m_hReadThread(pthread_self())
+#elif defined(IB_WIN32)
+    , m_hReadThread(0)
+#endif
+{
 		m_isAlive = true;
         m_pClientSocket = clientSocket;       
 		m_pEReaderSignal = signal;
-		m_needsWriteSelect = false;
 		m_nMaxBufSize = IN_BUF_SIZE_DEFAULT;
 		m_buf.reserve(IN_BUF_SIZE_DEFAULT);
 }
 
 EReader::~EReader(void) {
-    m_isAlive = false;
-
-#if defined(IB_WIN32)
-    WaitForSingleObject(m_hReadThread, INFINITE);
+#if defined(IB_POSIX)
+    if (!pthread_equal(pthread_self(), m_hReadThread)) {
+        m_isAlive = false;
+        m_pClientSocket->eDisconnect();
+	pthread_join(m_hReadThread, NULL);
+    }
+#elif defined(IB_WIN32)
+    if (m_hReadThread) {
+        m_isAlive = false;
+        m_pClientSocket->eDisconnect();
+        WaitForSingleObject(m_hReadThread, INFINITE);
+    }
 #endif
-}
-
-void EReader::checkClient() {
-	m_needsWriteSelect = !m_pClientSocket->getTransport()->isOutBufferEmpty();
 }
 
 void EReader::start() {
 #if defined(IB_POSIX)
-    pthread_t thread;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create( &thread, &attr, readToQueueThread, this );
-    pthread_attr_destroy(&attr);
+    pthread_create( &m_hReadThread, NULL, readToQueueThread, this );
 #elif defined(IB_WIN32)
     m_hReadThread = CreateThread(0, 0, readToQueueThread, this, 0, 0);
 #else
@@ -69,7 +72,7 @@ DWORD WINAPI EReader::readToQueueThread(LPVOID lpParam)
 }
 
 void EReader::readToQueue() {
-	EMessage *msg = 0;
+	//EMessage *msg = 0;
 
 	while (m_isAlive) {
 		if (m_buf.size() == 0 && !processNonBlockingSelect() && m_pClientSocket->isSocketOK())
@@ -92,9 +95,11 @@ bool EReader::putMessageToQueue() {
 	if (msg == 0)
 		return false;
 
-	m_csMsgQueue.Enter();
-	m_msgQueue.push_back(ibapi::shared_ptr<EMessage>(msg));
-	m_csMsgQueue.Leave();
+	{
+		EMutexGuard lock(m_csMsgQueue);
+		m_msgQueue.push_back(std::shared_ptr<EMessage>(msg));
+	}
+
 	m_pEReaderSignal->issueSignal();
 
 	return true;
@@ -110,13 +115,12 @@ bool EReader::processNonBlockingSelect() {
 	if( m_pClientSocket->fd() >= 0 ) {
 
 		FD_ZERO( &readSet);
-		errorSet = writeSet = readSet;
+		FD_ZERO( &writeSet);
+		FD_ZERO( &errorSet);
 
 		FD_SET( m_pClientSocket->fd(), &readSet);
-
-		if (m_needsWriteSelect)
+		if (!m_pClientSocket->getTransport()->isOutBufferEmpty())
 			FD_SET( m_pClientSocket->fd(), &writeSet);
-
 		FD_SET( m_pClientSocket->fd(), &errorSet);
 
 		int ret = select( m_pClientSocket->fd() + 1, &readSet, &writeSet, &errorSet, &tval);
@@ -177,13 +181,14 @@ void EReader::onReceive() {
  	m_buf.resize(nRes + nOffset);	
 }
 
-bool EReader::bufferedRead(char *buf, int size) {
+bool EReader::bufferedRead(char *buf, unsigned int size) {
 	while (size > 0) {
-		while (m_buf.size() < size && m_buf.size() < m_nMaxBufSize)
+		while (m_buf.size() < size && m_buf.size() < m_nMaxBufSize) {
 			if (!processNonBlockingSelect() && !m_pClientSocket->isSocketOK())
 				return false;
+		}
 
-		int nBytes = std::min(m_nMaxBufSize, size);
+		int nBytes = (std::min<unsigned int>)(m_nMaxBufSize, size);
 
 		std::copy(m_buf.begin(), m_buf.begin() + nBytes, buf);
 		std::copy(m_buf.begin() + nBytes, m_buf.end(), m_buf.begin());
@@ -203,7 +208,7 @@ EMessage * EReader::readSingleMsg() {
 		if (!bufferedRead((char *)&msgSize, sizeof(msgSize)))
 			return 0;
 
-		msgSize = htonl(msgSize);
+		msgSize = ntohl(msgSize);
 
 		if (msgSize <= 0 || msgSize > MAX_MSG_LEN)
 			return 0;
@@ -250,19 +255,15 @@ EMessage * EReader::readSingleMsg() {
 	}
 }
 
-ibapi::shared_ptr<EMessage> EReader::getMsg(void) {
-	m_csMsgQueue.Enter();
+std::shared_ptr<EMessage> EReader::getMsg(void) {
+	EMutexGuard lock(m_csMsgQueue);
 
 	if (m_msgQueue.size() == 0) {
-		m_csMsgQueue.Leave();
-
-		return ibapi::shared_ptr<EMessage>();
+		return std::shared_ptr<EMessage>();
 	}
 
-	ibapi::shared_ptr<EMessage> msg = m_msgQueue.front();
-
+	std::shared_ptr<EMessage> msg = m_msgQueue.front();
 	m_msgQueue.pop_front();
-	m_csMsgQueue.Leave();
 
 	return msg;
 }
@@ -270,9 +271,8 @@ ibapi::shared_ptr<EMessage> EReader::getMsg(void) {
 
 void EReader::processMsgs(void) {
 	m_pClientSocket->onSend();
-	checkClient();
 
-	ibapi::shared_ptr<EMessage> msg = getMsg();
+	std::shared_ptr<EMessage> msg = getMsg();
 
 	if (!msg.get())
 		return;

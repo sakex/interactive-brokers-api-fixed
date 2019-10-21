@@ -1,12 +1,14 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef scanner_def
-#define scanner_def
+#ifndef TWS_API_CLIENT_SCANNERSUBSCRIPTION_H
+#define TWS_API_CLIENT_SCANNERSUBSCRIPTION_H
 
 #include <float.h>
 #include <limits.h>
+#include <string>
+
 
 #define UNSET_DOUBLE DBL_MAX
 #define UNSET_INTEGER INT_MAX
@@ -22,8 +24,8 @@ struct ScannerSubscription {
 		marketCapBelow = DBL_MAX;
 		couponRateAbove = DBL_MAX;
 		couponRateBelow = DBL_MAX;
-		excludeConvertible = 0;
-		averageOptionVolumeAbove = 0;
+		excludeConvertible = INT_MAX;
+		averageOptionVolumeAbove = INT_MAX;
 	}
     int numberOfRows;
     std::string instrument;

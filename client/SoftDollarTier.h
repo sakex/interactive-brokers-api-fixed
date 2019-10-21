@@ -1,6 +1,12 @@
-﻿#pragma once
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+ * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
-#include "StdAfx.h"
+#pragma once
+#ifndef TWS_API_CLIENT_SOFTDOLLARTIER_H
+#define TWS_API_CLIENT_SOFTDOLLARTIER_H
+
+#include "platformspecific.h"
+#include <string>
 
 class TWSAPIDLLEXP SoftDollarTier
 {
@@ -14,3 +20,4 @@ public:
 	std::string displayName() const;
 };
 
+#endif

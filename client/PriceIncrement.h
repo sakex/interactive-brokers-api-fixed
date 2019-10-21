@@ -2,15 +2,13 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef TWS_API_CLIENT_DEFAULTEWRAPPER_H
-#define TWS_API_CLIENT_DEFAULTEWRAPPER_H
+#ifndef TWS_API_CLIENT_PRICEINCREMENT_H
+#define TWS_API_CLIENT_PRICEINCREMENT_H
 
-#include "EWrapper.h"
-
-class TWSAPIDLLEXP DefaultEWrapper :
-    public EWrapper
+struct PriceIncrement
 {
-public:
-	#include "EWrapper_prototypes.h"
+	double lowEdge;
+	double increment;
 };
-#endif
+
+#endif // priceincrement_def

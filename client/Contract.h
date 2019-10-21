@@ -1,9 +1,9 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef contract_def
-#define contract_def
+#ifndef TWS_API_CLIENT_CONTRACT_H
+#define TWS_API_CLIENT_CONTRACT_H
 
 #include "TagValue.h"
 
@@ -51,9 +51,9 @@ struct ComboLeg
 	}
 };
 
-struct UnderComp
+struct DeltaNeutralContract
 {
-	UnderComp()
+	DeltaNeutralContract()
 		: conId(0)
 		, delta(0)
 		, price(0)
@@ -64,7 +64,7 @@ struct UnderComp
 	double	price;
 };
 
-typedef ibapi::shared_ptr<ComboLeg> ComboLegSPtr;
+typedef std::shared_ptr<ComboLeg> ComboLegSPtr;
 
 struct Contract
 {
@@ -73,7 +73,7 @@ struct Contract
 		, strike(0)
 		, includeExpired(false)
 		, comboLegs(NULL)
-		, underComp(NULL)
+		, deltaNeutralContract(NULL)
 	{
 	}
 
@@ -98,12 +98,12 @@ struct Contract
 
 	// combo legs
 	typedef std::vector<ComboLegSPtr> ComboLegList;
-	typedef ibapi::shared_ptr<ComboLegList> ComboLegListSPtr;
+	typedef std::shared_ptr<ComboLegList> ComboLegListSPtr;
 
 	ComboLegListSPtr comboLegs;
 
-	// delta neutral
-	UnderComp* underComp;
+	// delta neutral contract
+	DeltaNeutralContract* deltaNeutralContract;
 
 public:
 
@@ -126,7 +126,7 @@ struct ContractDetails
 	{
 	}
 
-	Contract	summary;
+	Contract	contract;
 	std::string	marketName;
 	double		minTick;
 	std::string	orderTypes;
@@ -143,6 +143,13 @@ struct ContractDetails
 	std::string	liquidHours;
 	std::string	evRule;
 	double		evMultiplier;
+	int			mdSizeMultiplier;
+	int			aggGroup;
+	std::string	underSymbol;
+	std::string	underSecType;
+	std::string marketRuleIds;
+	std::string realExpirationDate;
+	std::string lastTradeTime;
 
 	TagValueListSPtr secIdList;
 
@@ -162,6 +169,13 @@ struct ContractDetails
 	std::string	nextOptionType;
 	bool		nextOptionPartial;
 	std::string	notes;
+};
+
+struct ContractDescription
+{
+	Contract contract;
+	typedef std::vector<std::string> DerivativeSecTypesList;
+	DerivativeSecTypesList derivativeSecTypes;
 };
 
 inline void

@@ -1,19 +1,19 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef order_def
-#define order_def
+#ifndef TWS_API_CLIENT_ORDER_H
+#define TWS_API_CLIENT_ORDER_H
 
 #include "TagValue.h"
 #include "OrderCondition.h"
 #include "SoftDollarTier.h"
-
 #include <float.h>
 #include <limits.h>
 
 #define UNSET_DOUBLE DBL_MAX
 #define UNSET_INTEGER INT_MAX
+#define UNSET_LONG LLONG_MAX
 
 enum Origin { CUSTOMER,
               FIRM,
@@ -23,6 +23,10 @@ enum AuctionStrategy { AUCTION_UNSET = 0,
                        AUCTION_MATCH = 1,
                        AUCTION_IMPROVEMENT = 2,
                        AUCTION_TRANSPARENT = 3 };
+
+enum UsePriceMmgtAlgo { DONT_USE = 0,
+                        USE,
+                        DEFAULT = UNSET_INTEGER };
 
 struct OrderComboLeg
 {
@@ -39,7 +43,7 @@ struct OrderComboLeg
 	}
 };
 
-typedef ibapi::shared_ptr<OrderComboLeg> OrderComboLegSPtr;
+typedef std::shared_ptr<OrderComboLeg> OrderComboLegSPtr;
 
 struct Order
 {
@@ -147,12 +151,37 @@ struct Order
 		adjustedTrailingAmount = UNSET_DOUBLE;
 		lmtPriceOffset = UNSET_DOUBLE;
 		extOperator = "";
+
+		// native cash quantity
+		cashQty = UNSET_DOUBLE;
+
+        mifid2DecisionMaker = "";
+        mifid2DecisionAlgo = "";
+        mifid2ExecutionTrader = "";
+        mifid2ExecutionAlgo = "";
+
+		// don't use auto price for hedge
+		dontUseAutoPriceForHedge = false;
+
+        isOmsContainer = false;
+        discretionaryUpToLimitPrice = false;
+
+		autoCancelDate = "";
+		filledQuantity = UNSET_DOUBLE;
+		refFuturesConId = UNSET_INTEGER;
+		autoCancelParent = false;
+		shareholder = "";
+		imbalanceOnly = false;
+		routeMarketableToBbo = false;
+		parentPermId = UNSET_LONG;
+		
+        usePriceMgmtAlgo = UsePriceMmgtAlgo::DEFAULT;
 	}
 
 	// order identifier
 	long     orderId;
 	long     clientId;
-	long     permId;
+	int      permId;
 
 	// main order fields
 	std::string action;
@@ -282,7 +311,7 @@ struct Order
 
 	// order combo legs
 	typedef std::vector<OrderComboLegSPtr> OrderComboLegList;
-	typedef ibapi::shared_ptr<OrderComboLegList> OrderComboLegListSPtr;
+	typedef std::shared_ptr<OrderComboLegList> OrderComboLegListSPtr;
 
 	OrderComboLegListSPtr orderComboLegs;
 
@@ -302,7 +331,7 @@ struct Order
 	int adjustableTrailingUnit;
 	double lmtPriceOffset;
 
-	std::vector<ibapi::shared_ptr<OrderCondition>> conditions;
+	std::vector<std::shared_ptr<OrderCondition>> conditions;
 	bool conditionsCancelOrder;
 	bool conditionsIgnoreRth;
 
@@ -310,6 +339,32 @@ struct Order
 	std::string extOperator;
 
 	SoftDollarTier softDollarTier;
+
+	// native cash quantity
+	double cashQty;
+
+    std::string mifid2DecisionMaker;
+    std::string mifid2DecisionAlgo;
+    std::string mifid2ExecutionTrader;
+    std::string mifid2ExecutionAlgo;
+
+	// don't use auto price for hedge
+	bool dontUseAutoPriceForHedge;
+
+    bool isOmsContainer;
+
+    bool discretionaryUpToLimitPrice;
+
+    std::string autoCancelDate;
+    double filledQuantity;
+    int refFuturesConId;
+    bool autoCancelParent;
+    std::string shareholder;
+    bool imbalanceOnly;
+    bool routeMarketableToBbo;
+    long long parentPermId;
+
+    UsePriceMmgtAlgo usePriceMgmtAlgo;
 
 public:
 

@@ -1,10 +1,11 @@
-﻿/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+﻿/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef execution_def
-#define execution_def
+#ifndef TWS_API_CLIENT_EXECUTION_H
+#define TWS_API_CLIENT_EXECUTION_H
 
+#include <string>
 
 struct Execution
 {
@@ -18,6 +19,7 @@ struct Execution
 		cumQty = 0;
 		avgPrice = 0;
 		evMultiplier = 0;
+        lastLiquidity = 0;
 	}
 
 	std::string	execId;
@@ -31,12 +33,13 @@ struct Execution
 	long		clientId;
 	long		orderId;
 	int			liquidation;
-	int			cumQty;
+	double			cumQty;
 	double		avgPrice;
 	std::string	orderRef;
 	std::string	evRule;
 	double		evMultiplier;
 	std::string modelCode;
+    int         lastLiquidity;
 };
 
 struct ExecutionFilter

@@ -2,15 +2,14 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #pragma once
-#ifndef TWS_API_CLIENT_DEFAULTEWRAPPER_H
-#define TWS_API_CLIENT_DEFAULTEWRAPPER_H
+#ifndef TWS_API_CLIENT_TICKATTRIB_H
+#define TWS_API_CLIENT_TICKATTRIB_H
 
-#include "EWrapper.h"
-
-class TWSAPIDLLEXP DefaultEWrapper :
-    public EWrapper
+struct TickAttrib
 {
-public:
-	#include "EWrapper_prototypes.h"
+	bool canAutoExecute;
+	bool pastLimit;
+	bool preOpen;
 };
+
 #endif
